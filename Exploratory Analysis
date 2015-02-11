@@ -1,0 +1,95 @@
+---
+title: "Exploratory Analysis"
+author: "JFynn"
+date: "11 February 2015"
+output: html_document
+---
+
+# Loading Data and Packages
+
+```{r}
+
+library("ggplot2")
+library("dplyr")
+library("corrplot")
+library("class")
+
+
+setwd('/Users/Flynn/Documents/NCI/data_mining/kaggle')
+
+train <- read.csv('./data/train.csv')
+test <- read.csv('./test.csv')
+gendermodel <- read.csv('./data/gendermodel.csv')
+genderclassmodel <- read.csv('./data/genderclassmodel.csv')
+
+```
+
+
+# Basic Plotting
+
+```{r}
+
+ggplot(train, aes(Age, Fare, color = Survived)) +
+        geom_point() +
+        theme_bw()
+
+barplot(table(train$Survived, train$Embarked))
+
+
+```
+
+# Cleaning
+
+
+```{r}
+
+# Change 'Embarked' values to something more easily
+# understood 
+
+train$Embarked <- as.character(train$Embarked)
+
+train$Embarked[train$Embarked == 'C'] <- 'Cherbourg'
+train$Embarked[train$Embarked == 'Q'] <- 'Queenstown'
+train$Embarked[train$Embarked == 'S'] <- 'Southampton'
+train$Embarked[train$Embarked == ' '] <- 'Unknown'
+
+
+# Create Age Groups based on the 
+train$Age_bin <- cut(train$Age, breaks = seq(0, 100, by = 10))
+train$Age_bin <- as.character(train$Age_bin)
+
+train$Age_bin[train$Age_bin == '(0, 10]'] <- 'Child'
+train$Age_bin[train$Age_bin == '(10, 20]'] <- 'Teen'
+train$Age_bin[train$Age_bin == '(20, 30]'] <- '20s'
+train$Age_bin[train$Age_bin == '(30, 40]'] <- '30s'
+train$Age_bin[train$Age_bin == '(40, 50]'] <- '40s'
+train$Age_bin[train$Age_bin == '(50, 60]'] <- '50s'
+train$Age_bin[train$Age_bin == '(60, 70]'] <- '60s'
+train$Age_bin[train$Age_bin == '(70, 80]'] <- 'Old'
+train$Age_bin[train$Age_bin == '(80, 90]'] <- 'Really Old'
+train$Age_bin[train$Age_bin == '(90, 100]'] <- 'Probably Too Old'
+
+
+
+master_vector = grep("Master.",train$Name, fixed=TRUE)
+miss_vector = grep("Miss.", train$Name, fixed=TRUE)
+mrs_vector = grep("Mrs.", train$Name, fixed=TRUE)
+mr_vector = grep("Mr.", train$Name, fixed=TRUE)
+dr_vector = grep("Dr.", train$Name, fixed=TRUE)
+
+
+
+```
+
+
+
+
+```{r}
+
+
+
+titanic_class <- knn(train, test, cl = train_labesl, k = 29)
+
+
+```
+
