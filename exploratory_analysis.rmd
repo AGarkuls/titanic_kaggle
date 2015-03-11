@@ -1,5 +1,5 @@
 ---
-title: "Exploratory Analysis"
+title: "Untitled"
 author: "JFynn"
 date: "11 February 2015"
 output: html_document
@@ -10,19 +10,69 @@ output: html_document
 ```{r}
 
 library("ggplot2")
+library("reshape2")
 library("dplyr")
 library("corrplot")
 library("class")
+library("RColorBrewer")
+library("randomForest")
 
 
-setwd('/Users/Flynn/Documents/NCI/data_mining/kaggle')
+setwd('/Users/Flynn/Documents/projects/titanic_kaggle')
 
-train <- read.csv('./data/train.csv')
-test <- read.csv('./test.csv')
-gendermodel <- read.csv('./data/gendermodel.csv')
-genderclassmodel <- read.csv('./data/genderclassmodel.csv')
+train <- read.csv('./data/train.csv', stringsAsFactors=FALSE)
+test <- read.csv('./data/test.csv', stringsAsFactors=FALSE)
+gendermodel <- read.csv('./data/gendermodel.csv', stringsAsFactors=FALSE)
+genderclassmodel <- read.csv('./data/genderclassmodel.csv', stringsAsFactors=FALSE)
 
 ```
+
+
+# Style Guide
+
+```{r}
+
+titanic_theme <- function() {
+
+  # Generate the colors for the chart procedurally with RColorBrewer
+  palette <- brewer.pal("Greys", n=9)
+  color.background = palette[2]
+  color.grid.major = palette[3]
+  color.axis.text = palette[6]
+  color.axis.title = palette[7]
+  color.title = palette[9]
+
+  # Begin construction of chart
+  theme_bw(base_size=9) +
+
+  # Set the entire chart region to a light gray color
+  theme(panel.background=element_rect(fill=color.background, color=color.background)) +
+  theme(plot.background=element_rect(fill=color.background, color=color.background)) +
+  theme(panel.border=element_rect(color=color.background)) +
+
+  # Format the grid
+  theme(panel.grid.major=element_line(color=color.grid.major,size=.25)) +
+  theme(panel.grid.minor=element_blank()) +
+  theme(axis.ticks=element_blank()) +
+
+  # Format the legend, but hide by default
+  theme(legend.background = element_rect(fill=color.background)) +
+  theme(legend.text = element_text(size=7,color=color.axis.title)) +
+
+  # Set title and axis labels, and format these and tick marks
+  theme(plot.title=element_text(color=color.title, size=10, vjust=1.25)) +
+  theme(axis.text.x=element_text(size=7,color=color.axis.text, angle = -45, 
+                                 vjust = 1.05, hjust =0 )) +
+  theme(axis.text.y=element_text(size=7,color=color.axis.text)) +
+  theme(axis.title.x=element_text(size=12,color=color.axis.title, vjust=0)) +
+  theme(axis.title.y=element_text(size=12,color=color.axis.title, vjust=1.25))
+
+}
+
+
+```
+
+
 
 
 # Basic Plotting
@@ -31,9 +81,12 @@ genderclassmodel <- read.csv('./data/genderclassmodel.csv')
 
 ggplot(train, aes(Age, Fare, color = Survived)) +
         geom_point() +
-        theme_bw()
+        titanic_theme()
 
-barplot(table(train$Survived, train$Embarked))
+
+ggplot(train, aes(Embarked, fill = ..count..)) +
+        geom_bar() +
+        theme_bw()
 
 
 ```
@@ -53,34 +106,141 @@ train$Embarked[train$Embarked == 'Q'] <- 'Queenstown'
 train$Embarked[train$Embarked == 'S'] <- 'Southampton'
 train$Embarked[train$Embarked == ' '] <- 'Unknown'
 
+test$Embarked[test$Embarked == 'C'] <- 'Cherbourg'
+test$Embarked[test$Embarked == 'Q'] <- 'Queenstown'
+test$Embarked[test$Embarked == 'S'] <- 'Southampton'
+test$Embarked[test$Embarked == ' '] <- 'Unknown'
+
 
 # Create Age Groups based on the 
 train$Age_bin <- cut(train$Age, breaks = seq(0, 100, by = 10))
 train$Age_bin <- as.character(train$Age_bin)
 
-train$Age_bin[train$Age_bin == '(0, 10]'] <- 'Child'
-train$Age_bin[train$Age_bin == '(10, 20]'] <- 'Teen'
-train$Age_bin[train$Age_bin == '(20, 30]'] <- '20s'
-train$Age_bin[train$Age_bin == '(30, 40]'] <- '30s'
-train$Age_bin[train$Age_bin == '(40, 50]'] <- '40s'
-train$Age_bin[train$Age_bin == '(50, 60]'] <- '50s'
-train$Age_bin[train$Age_bin == '(60, 70]'] <- '60s'
-train$Age_bin[train$Age_bin == '(70, 80]'] <- 'Old'
-train$Age_bin[train$Age_bin == '(80, 90]'] <- 'Really Old'
-train$Age_bin[train$Age_bin == '(90, 100]'] <- 'Probably Too Old'
+train$Age_bin[train$Age_bin == '(0,10]'] <- 'Child'
+train$Age_bin[train$Age_bin == '(10,20]'] <- 'Teen'
+train$Age_bin[train$Age_bin == '(20,30]'] <- '20s'
+train$Age_bin[train$Age_bin == '(30,40]'] <- '30s'
+train$Age_bin[train$Age_bin == '(40,50]'] <- '40s'
+train$Age_bin[train$Age_bin == '(50,60]'] <- '50s'
+train$Age_bin[train$Age_bin == '(60,70]'] <- '60s'
+train$Age_bin[train$Age_bin == '(70,80]'] <- 'Old'
+train$Age_bin[train$Age_bin == '(80,90]'] <- 'Really Old'
+train$Age_bin[train$Age_bin == '(90,100]'] <- 'Probably Too Old'
+
+
+test$Age_bin <- cut(test$Age, breaks = seq(0, 100, by = 10))
+test$Age_bin <- as.character(test$Age_bin)
+
+test$Age_bin[test$Age_bin == '(0,10]'] <- 'Child'
+test$Age_bin[test$Age_bin == '(10,20]'] <- 'Teen'
+test$Age_bin[test$Age_bin == '(20,30]'] <- '20s'
+test$Age_bin[test$Age_bin == '(30,40]'] <- '30s'
+test$Age_bin[test$Age_bin == '(40,50]'] <- '40s'
+test$Age_bin[test$Age_bin == '(50,60]'] <- '50s'
+test$Age_bin[test$Age_bin == '(60,70]'] <- '60s'
+test$Age_bin[test$Age_bin == '(70,80]'] <- 'Old'
+test$Age_bin[test$Age_bin == '(80,90]'] <- 'Really Old'
+test$Age_bin[test$Age_bin == '(90,100]'] <- 'Probably Too Old'
+
+```
 
 
 
-master_vector = grep("Master.",train$Name, fixed=TRUE)
-miss_vector = grep("Miss.", train$Name, fixed=TRUE)
-mrs_vector = grep("Mrs.", train$Name, fixed=TRUE)
-mr_vector = grep("Mr.", train$Name, fixed=TRUE)
-dr_vector = grep("Dr.", train$Name, fixed=TRUE)
+## Data Aggregation
 
+This is an attempt to write a reproducible way to get very detailed summary statistics for Titanic data.
+
+This for first chunk will tell you the survival percentage of people who embarked from Southampton
+
+```{r}
+
+summary_stats <- group_by(train, Embarked, Survived)
+summary_stats <- summarise(summary_stats, 
+                           count = n()
+                           ) 
+
+summary_stats$Survived[summary_stats$Survived == 0] <- 'dead'
+summary_stats$Survived[summary_stats$Survived == 1] <- 'survived'
+
+summary_stats <- dcast(summary_stats, Embarked ~ Survived)
+summary_stats[is.na(summary_stats)] <- 0
+
+summary_stats <- mutate(summary_stats,
+                         non_survival_rate = summary_stats$survived / 
+        (summary_stats$dead + summary_stats$survived))
+
+
+
+summary_stats
 
 
 ```
 
+This chunk will tell you the survival rates of passengers depending on how old they are, their gender, and the number of siblings which they have on the boat. 
+
+
+```{r}
+
+
+
+summary_stats <- group_by(train, Sex, Age_bin, SibSp, Survived)
+summary_stats <- summarise(summary_stats, 
+                           count = n()
+                           ) 
+
+summary_stats$Survived[summary_stats$Survived == 0] <- 'dead'
+summary_stats$Survived[summary_stats$Survived == 1] <- 'survived'
+
+summary_stats <- dcast(summary_stats, Sex + Age_bin + SibSp ~ Survived)
+summary_stats[is.na(summary_stats)] <- 0
+
+summary_stats <- mutate(summary_stats,
+                         non_survival_rate = summary_stats$survived / 
+        (summary_stats$dead + summary_stats$survived))
+
+
+
+summary_stats
+
+```
+
+
+
+# Random forest
+
+```{r}
+
+train_ed <- train[-4]
+
+train_ed <- train_ed[-8]
+train_ed <- train_ed[-9]
+train_ed <- train_ed[-10]
+train_ed <- train_ed[-1]
+
+train_ed$Sex <- as.factor(train_ed$Sex)
+train_ed$Embarked <- as.factor(train_ed$Embarked)
+train_ed$Survived <- as.factor(train_ed$Survived)
+
+
+train.imputed <- rfImpute(Survived ~ ., train_ed)
+
+train.rf <- randomForest(Survived ~ ., data=train.imputed, importance=TRUE,
+                         proximity=TRUE)
+
+
+test_ed <- test[-3]
+test_ed <- test_ed[-1]
+test_ed <- test_ed[-6]
+test_ed <- test_ed[-7]
+test_ed <- test_ed[-8]
+test_ed$Sex <- as.factor(test_ed$Sex)
+test_ed$Embarked <- as.factor(test_ed$Embarked)
+
+
+
+# train.pred <- predict(train.rf, test_ed, type = 'response')
+
+```
 
 
 
@@ -88,7 +248,7 @@ dr_vector = grep("Dr.", train$Name, fixed=TRUE)
 
 
 
-titanic_class <- knn(train, test, cl = train_labesl, k = 29)
+# titanic_class <- knn(train, test, cl = train_labesl, k = 29)
 
 
 ```
