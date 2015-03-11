@@ -1,7 +1,8 @@
 ---
-title: "Untitled"
+title: "Kaggle - Titanic"
 author: "JFynn"
-date: "11 February 2015"
+Start Date: "11 February 2015"
+Commit Date: '11 March 2015'
 output: html_document
 ---
 
