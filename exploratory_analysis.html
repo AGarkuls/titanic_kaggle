@@ -317,15 +317,15 @@ train_ed &lt;- train_ed[-9]
 
 train.imputed &lt;- rfImpute(Survived ~ ., data=train_ed)</code></pre>
 <pre><code>## ntree      OOB      1      2
-##   300:  16.05%  7.83% 29.24%
+##   300:  16.50%  7.83% 30.41%
 ## ntree      OOB      1      2
-##   300:  16.61%  8.56% 29.53%
+##   300:  17.06%  9.29% 29.53%
 ## ntree      OOB      1      2
-##   300:  16.39%  8.74% 28.65%
+##   300:  16.50%  7.83% 30.41%
 ## ntree      OOB      1      2
-##   300:  16.72%  8.56% 29.82%
+##   300:  15.60%  7.65% 28.36%
 ## ntree      OOB      1      2
-##   300:  15.94%  7.83% 28.95%</code></pre>
+##   300:  16.50%  8.56% 29.24%</code></pre>
 <pre class="r"><code>train.rf &lt;- randomForest(train.imputed, data=train_ed, keep.forest=TRUE,
                          type = supervised)
 # getTree(train.rf, k=1, labelVar=FALSE)
