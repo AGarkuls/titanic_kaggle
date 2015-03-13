@@ -111,7 +111,7 @@ test$Embarked[test$Embarked == 'C'] <- 'Cherbourg'
 test$Embarked[test$Embarked == 'Q'] <- 'Queenstown'
 test$Embarked[test$Embarked == 'S'] <- 'Southampton'
 test$Embarked[test$Embarked == ' '] <- 'Unknown'
-
+test$Embarked <- as.factor(test$Embarked)
 
 # Create Age Groups based on the 
 train$Age_bin <- cut(train$Age, breaks = seq(0, 100, by = 10))
@@ -211,36 +211,34 @@ summary_stats
 
 ```{r}
 
-train_ed <- train[-4]
+train$Survived <- as.factor(train$Survived) 
+train$Sex <- as.factor(train$Sex)
+train$Embarked <- as.factor(train$Embarked)
 
+train_ed <- train[-1]
+train_ed <- train_ed[-3]
+train_ed <- train_ed[-7]
 train_ed <- train_ed[-8]
 train_ed <- train_ed[-9]
-train_ed <- train_ed[-10]
-train_ed <- train_ed[-1]
+
+train.imputed <- rfImpute(Survived ~ ., data=train_ed)
+
+train.rf <- randomForest(train.imputed, data=train_ed, keep.forest=TRUE,
+                         type = supervised)
+# getTree(train.rf, k=1, labelVar=FALSE)
+
+
+test_ed <- test[-1]
+test_ed <- test_ed[-2]
+test_ed <- test_ed[-6]
+test_ed <- test_ed[-7]
 
 train_ed$Sex <- as.factor(train_ed$Sex)
 train_ed$Embarked <- as.factor(train_ed$Embarked)
-train_ed$Survived <- as.factor(train_ed$Survived)
 
+# predict(object = train.rf, newdata=test_ed)
 
-train.imputed <- rfImpute(Survived ~ ., train_ed)
-
-train.rf <- randomForest(Survived ~ ., data=train.imputed, importance=TRUE,
-                         proximity=TRUE)
-
-
-test_ed <- test[-3]
-test_ed <- test_ed[-1]
-test_ed <- test_ed[-6]
-test_ed <- test_ed[-7]
-test_ed <- test_ed[-8]
-test_ed$Sex <- as.factor(test_ed$Sex)
-test_ed$Embarked <- as.factor(test_ed$Embarked)
-
-
-
-# train.pred <- predict(train.rf, test_ed, type = 'response')
-
+# test_ed$Survived <- 
 ```
 
 

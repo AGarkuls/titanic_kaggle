@@ -161,7 +161,7 @@ test$Embarked[test$Embarked == 'C'] &lt;- 'Cherbourg'
 test$Embarked[test$Embarked == 'Q'] &lt;- 'Queenstown'
 test$Embarked[test$Embarked == 'S'] &lt;- 'Southampton'
 test$Embarked[test$Embarked == ' '] &lt;- 'Unknown'
-
+test$Embarked &lt;- as.factor(test$Embarked)
 
 # Create Age Groups based on the 
 train$Age_bin &lt;- cut(train$Age, breaks = seq(0, 100, by = 10))
@@ -305,44 +305,43 @@ summary_stats</code></pre>
 </div>
 <div id="random-forest" class="section level1">
 <h1>Random forest</h1>
-<pre class="r"><code>train_ed &lt;- train[-4]
+<pre class="r"><code>train$Survived &lt;- as.factor(train$Survived) 
+train$Sex &lt;- as.factor(train$Sex)
+train$Embarked &lt;- as.factor(train$Embarked)
 
+train_ed &lt;- train[-1]
+train_ed &lt;- train_ed[-3]
+train_ed &lt;- train_ed[-7]
 train_ed &lt;- train_ed[-8]
 train_ed &lt;- train_ed[-9]
-train_ed &lt;- train_ed[-10]
-train_ed &lt;- train_ed[-1]
+
+train.imputed &lt;- rfImpute(Survived ~ ., data=train_ed)</code></pre>
+<pre><code>## ntree      OOB      1      2
+##   300:  16.05%  7.83% 29.24%
+## ntree      OOB      1      2
+##   300:  16.61%  8.56% 29.53%
+## ntree      OOB      1      2
+##   300:  16.39%  8.74% 28.65%
+## ntree      OOB      1      2
+##   300:  16.72%  8.56% 29.82%
+## ntree      OOB      1      2
+##   300:  15.94%  7.83% 28.95%</code></pre>
+<pre class="r"><code>train.rf &lt;- randomForest(train.imputed, data=train_ed, keep.forest=TRUE,
+                         type = supervised)
+# getTree(train.rf, k=1, labelVar=FALSE)
+
+
+test_ed &lt;- test[-1]
+test_ed &lt;- test_ed[-2]
+test_ed &lt;- test_ed[-6]
+test_ed &lt;- test_ed[-7]
 
 train_ed$Sex &lt;- as.factor(train_ed$Sex)
 train_ed$Embarked &lt;- as.factor(train_ed$Embarked)
-train_ed$Survived &lt;- as.factor(train_ed$Survived)
 
+# predict(object = train.rf, newdata=test_ed)
 
-train.imputed &lt;- rfImpute(Survived ~ ., train_ed)</code></pre>
-<pre><code>## ntree      OOB      1      2
-##   300:  15.94%  7.10% 30.12%
-## ntree      OOB      1      2
-##   300:  16.50%  8.20% 29.82%
-## ntree      OOB      1      2
-##   300:  17.62%  9.84% 30.12%
-## ntree      OOB      1      2
-##   300:  16.16%  8.20% 28.95%
-## ntree      OOB      1      2
-##   300:  17.40%  9.84% 29.53%</code></pre>
-<pre class="r"><code>train.rf &lt;- randomForest(Survived ~ ., data=train.imputed, importance=TRUE,
-                         proximity=TRUE)
-
-
-test_ed &lt;- test[-3]
-test_ed &lt;- test_ed[-1]
-test_ed &lt;- test_ed[-6]
-test_ed &lt;- test_ed[-7]
-test_ed &lt;- test_ed[-8]
-test_ed$Sex &lt;- as.factor(test_ed$Sex)
-test_ed$Embarked &lt;- as.factor(test_ed$Embarked)
-
-
-
-# train.pred &lt;- predict(train.rf, test_ed, type = 'response')</code></pre>
+# test_ed$Survived &lt;- </code></pre>
 <pre class="r"><code># titanic_class &lt;- knn(train, test, cl = train_labesl, k = 29)</code></pre>
 </div>
 
